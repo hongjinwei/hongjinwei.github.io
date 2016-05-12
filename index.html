@@ -266,6 +266,114 @@
             
               
                 
+                <a class="post-title-link" href="/2016/05/12/hexo-deploy-时-github-pulickey-denied的问题/" itemprop="url">
+                  hexo deploy 时 github pulickey denied的问题
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-05-12T17:30:40+08:00" content="2016-05-12">
+              2016-05-12
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/05/12/hexo-deploy-时-github-pulickey-denied的问题/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/12/hexo-deploy-时-github-pulickey-denied的问题/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>#hexo在deploy的时候出错， 提示permission denied</p>
+<p>其实是gitgub授权的问题，但是我明明已经在github配置好了我的key，还是出现了这个问题。</p>
+<p>看了以下， 貌似github默认看id_rsa， 而我把rsa的名字改了，无法直接识别，用ssh-add来加入到ssd-agent中，但是重启之后又没有了。在mac osx下，可以使用ssh-add -K来把key添加到keychain中，终于解决了。</p>
+<p> <img src="/images/wulian.jpg" alt=""></p>
+<p>附上一个segmentfault的回答 <a href="http://segmentfault.com/q/1010000000835302?_ea=387155" target="_blank" rel="external">link</a></p>
+<p>另外 第一次安装记得需要另外安装deployer：</p>
+<pre><code>npm install hexo-deployer-git --save
+</code></pre><p>还有为什么segmentfault被墙了<img src="/images/wulian.jpg" alt=""></p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/05/12/第一次post/" itemprop="url">
                   第一次post
                 </a>
@@ -503,7 +611,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">2</span>
+              <span class="site-state-item-count">3</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
