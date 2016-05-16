@@ -92,7 +92,7 @@ netstat -anop |awk &amp;apos;$5~/192.168/&amp;apos; |awk &amp;apos;{print $4&amp
 <meta property="og:site_name" content="Home">
 <meta property="og:description" content="Cobar集群积压问题一直困扰的集群单点积压之前我们的cobar集群一直出现单点故障，一直有一个结点的插入和update操作积压非常严重。在cobar的master结点上，用
 netstat -anop |awk &amp;apos;$5~/192.168/&amp;apos; |awk &amp;apos;{print $4&amp;quot;\t&amp;quot;$5;}&amp;apos;|grep &amp;quot;^:&amp;quot; |aw">
-<meta property="og:updated_time" content="2016-05-16T14:58:08.000Z">
+<meta property="og:updated_time" content="2016-05-16T15:01:27.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="cobar集群单点积压">
 <meta name="twitter:description" content="Cobar集群积压问题一直困扰的集群单点积压之前我们的cobar集群一直出现单点故障，一直有一个结点的插入和update操作积压非常严重。在cobar的master结点上，用
@@ -318,17 +318,8 @@ netstat -anop |awk &amp;apos;$5~/192.168/&amp;apos; |awk &amp;apos;{print $4&amp
 <pre><code>netstat -anop |awk &apos;$5~/192.168/&apos; |awk &apos;{print $4&quot;\t&quot;$5;}&apos;|grep &quot;^:&quot; |awk -F &apos;:&apos; &apos;{print $8;}&apos; |sort |uniq -c
 </code></pre><p>查看到每个结点的连接数目，可以看到有一个结点连接数目非常高，一般连接数目都是100左右，有一个达到了700-800之多，流量明显不正常。而且集群速度非常慢，内容由于处理慢，积压严重。</p>
 <h2 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h2><p>开启sql单点的慢查询日志：</p>
-<pre><code>//查看慢查询时间
-mysql&gt; show variables like &quot;long_query_time&quot;;默认10s
-//查看慢查询配置情况
-mysql&gt; show status like &quot;%slow_queries%&quot;;
-//查看慢查询日志路径
-mysql&gt; show variables like &quot;%slow%&quot;;
-//开启日志
-mysql&gt; set global slow_query_log=ON;
-//设置时间
-mysql&gt; set global slow_launch_time=5;
-</code></pre><p>  或者直接修改my.cnf</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">//查看慢查询时间</span><br><span class="line">mysql&gt; show variables like &quot;long_query_time&quot;;默认10s</span><br><span class="line">//查看慢查询配置情况</span><br><span class="line">mysql&gt; show status like &quot;%slow_queries%&quot;;</span><br><span class="line">//查看慢查询日志路径</span><br><span class="line">mysql&gt; show variables like &quot;%slow%&quot;;</span><br><span class="line">//开启日志</span><br><span class="line">mysql&gt; set global slow_query_log=ON;</span><br><span class="line">//设置时间</span><br><span class="line">mysql&gt; set global slow_launch_time=5;</span><br></pre></td></tr></table></figure>
+<p>  或者直接修改my.cnf</p>
 <pre><code>slow_query_log_file=/mysql/log/nagiosdb-slow.log
 slow_launch_time=5
 </code></pre><p>  在慢查询日志中，可以看到一些比较慢的查询，发现一般insert的语句竟然达到了300s，匪夷所思。而一般的select语句一般时间都不长。</p>
