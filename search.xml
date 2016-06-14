@@ -4,6 +4,167 @@
   
     
     <entry>
+      <title><![CDATA[Nagios 短信配置]]></title>
+      <url>http://yoursite.com/2016/06/14/Nagios-%E7%9F%AD%E4%BF%A1%E9%85%8D%E7%BD%AE/</url>
+      <content type="html"><![CDATA[<p><a href="https://exchange.nagios.org/directory/Addons/Notifications/SMS/SMS-Notifications-and-Alerting-via-SMSEagle/details" target="_blank" rel="external">SMS Notifications and Alerting via SMSEagle</a></p>
+<p>Plugin for Nagios to send SMS Text Message notifications with SMSEagle - sms hardware gateway. </p>
+<p>Simple setup in about 5 minutes. </p>
+<p>SMSEAGLE SETUP </p>
+<p>Create a new user for this script in SMSEagle.<br>This user will be referenced below as: SMSEAGLEUSER and SMSEAGLEPASSWORD<br>Replace SMSEAGLEUSER and SMSEAGLEPASSWORD in script below with your values. </p>
+<p>NAGIOS SETUP </p>
+<ol>
+<li>Create the SMS notification commands. (Commonly found in commands.cfg)<br>Replace SMSEAGLEIP with IP Address of your SMSEagle device.<br>Replace SMSEAGLEUSER and SMSEAGLEPASSWORD with your user/password to SMSEagle. </li>
+</ol>
+<p>Define two commands: </p>
+<pre><code>define command { 
+command_name notify-by-sms 
+command_line $USER1$/notify_eagle_sms.pl -s SMSEAGLEIP -u SMSEAGLEUSER -p SMSEAGLEPASSWORD -d $CONTACTPAGER$ -t &quot;$NOTIFICATIONTYPE$ $SERVICESTATE$ $SERVICEDESC$ Host($HOSTNAME$) Info($SERVICEOUTPUT$) Date($SHORTDATETIME$)&quot; 
+} 
+
+define command { 
+command_name host-notify-by-sms 
+command_line $USER1$/notify_eagle_sms.pl -s SMSEAGLEIP -u SMSEAGLEUSER -p SMSEAGLEPASSWORD -d $CONTACTPAGER$ -t &quot;$NOTIFICATIONTYPE$ $HOSTSTATE$ Host($HOSTALIAS$) Info($HOSTOUTPUT$) Time($SHORTDATETIME$)&quot; 
+} 
+</code></pre><ol>
+<li>In your nagios contacts (Commonly found on contacts.cfg) add<br>the contact. Field “pager” should contain a mobile number for sms alerts in<br>full international format e.g. 48xxxxxxxxx </li>
+</ol>
+<pre><code>define contact { 
+    contact_name engineer 
+    alias Support Engineer 
+    service_notification_period 24x7 
+    host_notification_period 24x7 
+    service_notification_options w,u,c,r 
+    host_notification_options d,u,r 
+    service_notification_commands notify-by-email,notify-by-sms 
+    host_notification_commands host-notify-by-email,host-notify-by-sms 
+    email engineer@somedomain.com 
+    pager 48xxxxxxxx 
+} 
+</code></pre><p>That’s it! </p>
+<p>Notice for Nagios XI users: If you encounter perl error, please add the path to the perl executable at the start of the command in Nagios.</p>
+<p>perl script add this into libexec:</p>
+<pre><code>#!/usr/bin/perl
+# 
+# ============================== SUMMARY =====================================
+#
+# Program : notify_eagle_sms.pl
+# Version : 1.0
+# Date : Feb 21 2013
+# Author : Radoslaw Janowski / Proximus Software
+# Forked from: Nagios-SMS-WT (https://github.com/m-r-h/Nagios-SMS-WT)
+# Summary : This plugin sends SMS alerts with SMSEagle hardware sms gateway
+# License : BSD
+#
+# ============================= MORE INFO ======================================
+#
+# Visit: http://www.smseagle.eu
+#
+# The latest version of this plugin can be found on GitHub at:
+# http://bitbucket.org/proximus/smseagle-nagios
+#
+# ============================= SETUP ==========================================
+#
+# Copy this file to your Nagios plugin folder
+#
+# SMSEAGLE SETUP
+#
+# Create a new user for this script in SMSEagle device.
+# This user will be referenced below as: SMSEAGLEUSER and SMSEAGLEPASSWORD 
+# Replace SMSEAGLEUSER and SMSEAGLEPASSWORD in script below with your values.
+#
+# NAGIOS SETUP
+#
+# 1. Create the SMS notification commands.  (Commonly found in commands.cfg)
+#    Replace SMSEAGLEIP with IP Address of your SMSEagle device.
+#    Replace SMSEAGLEUSER and SMSEAGLEPASSWORD with your user/password to SMSEagle.
+#
+# Define two commands:
+# 
+#     define command { 
+#             command_name notify-by-sms 
+#             command_line $USER1$/notify_eagle_sms.pl -s SMSEAGLEIP -u SMSEAGLEUSER -p SMSEAGLEPASSWORD -d $CONTACTPAGER$ -t &quot;NOTIFICATIONTYPE$ $SERVICESTATE$ $SERVICEDESC$ Host($HOSTNAME$) Info($SERVICEOUTPUT$) Date($SHORTDATETIME$)&quot; 
+#     } 
+#    
+#     define command { 
+#             command_name host-notify-by-sms 
+#             command_line $USER1$/notify_eagle_sms.pl -s SMSEAGLEIP -u SMSEAGLEUSER -p SMSEAGLEPASSWORD -d $CONTACTPAGER$ -t &quot;$NOTIFICATIONTYPE$ $HOSTSTATE$ Host($HOSTALIAS$) Info($HOSTOUTPUT$) Time($SHORTDATETIME$)&quot; 
+#     }
+# 
+# 
+# 2. In your nagios contacts (Commonly found on contacts.cfg) add 
+#     the contact. Field &quot;pager&quot; should contain a mobile number for sms alerts in
+#     full international format e.g. 48xxxxxxxxx
+#    
+# 
+#     define contact{
+#             contact_name                    engineer
+#             alias                           Support Engineer
+#             service_notification_period     24x7
+#             host_notification_period        24x7
+#             service_notification_options    w,u,c,r
+#             host_notification_options       d,u,r
+#             service_notification_commands   notify-by-email,notify-by-sms
+#             host_notification_commands      host-notify-by-email,host-notify-by-sms
+#             email                           engineer@somedomain.com
+#             pager                           48xxxxxxxx
+#     }
+#
+# 
+# ============================= SCRIPT ==========================================
+#
+# Script params description:
+#
+# smseagleip = IP Address of your SMSEagle device (eg.: 192.168.1.150)
+# user = SMSEagle user
+# password = SMSEagle password
+# dstaddr = Destination mobile number (the number to send SMS to)
+# txt = the text message body
+
+use strict;
+use LWP::Simple;
+use LWP::UserAgent;
+use URI::Escape;
+use Getopt::Long;
+use HTTP::Request::Common;
+
+my %args;
+
+GetOptions(
+    &apos;help&apos;      =&gt; \$args{help},
+    &apos;smseagleip=s&apos; =&gt; \$args{smseagleip},
+    &apos;user=s&apos;      =&gt; \$args{user},
+    &apos;password=s&apos;     =&gt; \$args{password},
+    &apos;dstaddr=s&apos; =&gt; \$args{dstaddr},
+    &apos;txt=s&apos;     =&gt; \$args{txt}
+     );
+
+if(defined($args{help}) || !defined($args{smseagleip}) || !defined($args{user}) || !defined($args{password}) || !defined($args{dstaddr}) || !defined($args{txt}) ) {
+    print &quot;usage: notify_eagle_sms.pl --smseagleip &lt;ip of smsaegle&gt; --user &lt;username&gt; --password &lt;password&gt; --dstaddr &lt;destination number&gt; --txt &lt;message&gt; \n&quot;;
+    exit(0);
+}
+
+## URL Encode the message text
+my $text = uri_escape($args{txt});
+
+## Build the URL
+my $baseurl = &quot;http://&quot;.$args{smseagleip}.&apos;/index.php/http_api/&apos;;
+my $req = GET $baseurl.&quot;send_sms?login=$args{user}&amp;pass=$args{password}&amp;to=$args{dstaddr}&amp;message=$text&quot;;
+
+
+## Create the user agent and send the request
+my $ua = LWP::UserAgent-&gt;new();
+my $rsp = $ua-&gt;request($req);
+
+## Process the response
+if($rsp-&gt;content == &quot;OK&quot;) {
+    print &quot;Message sent succesfully to $args{dstaddr}\n&quot;;
+} else {
+    print &quot;Sent failure: &quot; . $rsp-&gt;content . &quot;\n&quot;;
+}
+</code></pre>]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[慎用MySQL的QueryCache!]]></title>
       <url>http://yoursite.com/2016/05/25/%E5%85%B3%E9%97%ADMySQL%E7%9A%84QueryCache/</url>
       <content type="html"><![CDATA[<h2 id="慎用MYSQL的QueryCache"><a href="#慎用MYSQL的QueryCache" class="headerlink" title="慎用MYSQL的QueryCache"></a>慎用MYSQL的QueryCache</h2><p>当你的数据库打开了Query Cache（简称QC）功能后，数据库在执行SELECT语句时，会将其结果放到QC中，当下一次处理同样的SELECT请求时，数据库就会从QC取得结果，而不需要去数据表中查询。</p>
