@@ -266,6 +266,149 @@
             
               
                 
+                <a class="post-title-link" href="/2016/07/07/java的1900年时间问题/" itemprop="url">
+                  java的1900年时间问题
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-07T17:08:27+08:00" content="2016-07-07">
+              2016-07-07
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/07/07/java的1900年时间问题/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/07/07/java的1900年时间问题/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>在爬公元农历数据，检查数据的时候发现了一件非常有趣的事情，就是在1900年1月1号的时候，当时的timestamp减去86400000ms，发现时间竟然不一致，然后google了一下，发现在stackoverflow上有人提了类似的问题：<br><a href="http://stackoverflow.com/questions/16409554/30-minute-error-in-java-date-calculation-in-year-1900-only" target="_blank" rel="external">http://stackoverflow.com/questions/16409554/30-minute-error-in-java-date-calculation-in-year-1900-only</a></p>
+<h1 id="Question"><a href="#Question" class="headerlink" title="Question:"></a>Question:</h1><p>30 minute error in Java date calculation in year 1900 only<br>    package check;</p>
+<pre><code>import java.util.Calendar;
+
+public class Test {
+    public static void main(String[] args) {
+        // length of a day
+        long DAY_MILLIS = 1000 * 60 * 60 * 24;
+
+        Calendar cal = Calendar.getInstance();
+
+        cal.set(1900, 0, 1, 0, 0, 0);
+        System.out.println(cal.getTime());
+
+        cal.setTimeInMillis(cal.getTimeInMillis() + DAY_MILLIS);
+        System.out.println(cal.getTime());
+    }
+}
+</code></pre><p>And it’s result is:</p>
+<pre><code>Mon Jan 01 00:00:00 KST 1900
+Mon Jan 01 23:30:00 KST 1900 // Where is 30 minutes here?
+</code></pre><p>Most funny and important clue is that this problem happens when year is 1900 only.</p>
+<h1 id="Answer："><a href="#Answer：" class="headerlink" title="Answer："></a>Answer：</h1><blockquote>
+<p>This is because of historical GMT offset changes. See an example here <a href="http://www.timeanddate.com/worldclock/timezone.html?n=101&amp;syear=1900" target="_blank" rel="external">http://www.timeanddate.com/worldclock/timezone.html?n=101&amp;syear=1900</a>. These changes are different for different time zones. For instance in my time zone (EET) the result of your test is different:</p>
+</blockquote>
+<pre><code>Mon Jan 01 00:00:00 EET 1900
+Mon Jan 01 23:39:52 EET 1900
+</code></pre><blockquote>
+<p>because (according to Java) clocks were turned forward 0:20:08 hours on 1 Jan 1900 in EET. TimeZone has methods to determine offset for a particular date, TimeZone.getOffset(long date) API</p>
+<p>This method returns a historically correct offset value if an underlying TimeZone implementation subclass supports historical Daylight Saving Time schedule and GMT offset changes.</p>
+<p>Note that if you set Calendar to GMT and print the result in GMT there will be no error.</p>
+</blockquote>
+<pre><code>SimpleDateFormat df = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+   df.setTimeZone(TimeZone.getTimeZone(&quot;GMT&quot;));
+   Calendar cal = Calendar.getInstance();
+   cal.setTimeZone(TimeZone.getTimeZone(&quot;GMT&quot;));
+   cal.set(1900, 0, 1, 0, 0, 0);
+   System.out.println(df.format(cal.getTime()));
+   cal.setTimeInMillis(cal.getTimeInMillis() + 1000 * 60 * 60 * 24);
+   System.out.println(df.format(cal.getTime()));
+</code></pre><p>output</p>
+<pre><code>1900-01-01 00:00:00
+1900-01-02 00:00:00
+</code></pre>
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/06/14/Nagios-短信配置/" itemprop="url">
                   Nagios 短信配置
                 </a>
@@ -1197,7 +1340,7 @@ query_cache_type=1
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">6</span>
+              <span class="site-state-item-count">7</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -1207,7 +1350,7 @@ query_cache_type=1
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
