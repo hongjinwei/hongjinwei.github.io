@@ -266,6 +266,109 @@
             
               
                 
+                <a class="post-title-link" href="/2016/07/09/Presto实现原理和美团的使用实践/" itemprop="url">
+                  Presto实现原理和美团的使用实践
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-09T12:07:21+08:00" content="2016-07-09">
+              2016-07-09
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/07/09/Presto实现原理和美团的使用实践/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/07/09/Presto实现原理和美团的使用实践/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>最近网站需要重构，原来的sql架构没有办法承受10亿级别的数据量。cobar中间件虽然很好的构建了一个mysql集群，但是这个集群没有扩展性。而且我们的数据很多都是历史数据，不会频繁访问（其实现阶段根本不会用到这些数据），因此考虑新的技术选型，把冷数据和热数据分隔开来，使用扩展性良好以及性能表现出色的presto，目前正在测试性能，以目前的情况来说，presto性能确实不错，非常适合做数据仓库，能够胜任OLAP的工作。</p>
+<p>之后会进一步总结一些关于presto的性能测试情况，以及优缺点等情况。</p>
+<p> 关于pretso，发现了一篇非常好的技术文档介绍，来自美团：<br> <a href="http://tech.meituan.com/presto.html" target="_blank" rel="external">Presto实现原理和美团的使用实践</a><br> 感谢美团技术团队的分享！</p>
+
+          
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/07/07/java的1900年时间问题/" itemprop="url">
                   java的1900年时间问题
                 </a>
@@ -1340,7 +1443,7 @@ query_cache_type=1
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">7</span>
+              <span class="site-state-item-count">8</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -1350,7 +1453,7 @@ query_cache_type=1
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">6</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

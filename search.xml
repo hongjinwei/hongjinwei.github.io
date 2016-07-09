@@ -4,6 +4,15 @@
   
     
     <entry>
+      <title><![CDATA[Presto实现原理和美团的使用实践]]></title>
+      <url>http://yoursite.com/2016/07/09/Presto%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E5%92%8C%E7%BE%8E%E5%9B%A2%E7%9A%84%E4%BD%BF%E7%94%A8%E5%AE%9E%E8%B7%B5/</url>
+      <content type="html"><![CDATA[<p>最近网站需要重构，原来的sql架构没有办法承受10亿级别的数据量。cobar中间件虽然很好的构建了一个mysql集群，但是这个集群没有扩展性。而且我们的数据很多都是历史数据，不会频繁访问（其实现阶段根本不会用到这些数据），因此考虑新的技术选型，把冷数据和热数据分隔开来，使用扩展性良好以及性能表现出色的presto，目前正在测试性能，以目前的情况来说，presto性能确实不错，非常适合做数据仓库，能够胜任OLAP的工作。</p>
+<p>之后会进一步总结一些关于presto的性能测试情况，以及优缺点等情况。</p>
+<p> 关于pretso，发现了一篇非常好的技术文档介绍，来自美团：<br> <a href="http://tech.meituan.com/presto.html" target="_blank" rel="external">Presto实现原理和美团的使用实践</a><br> 感谢美团技术团队的分享！</p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[java的1900年时间问题]]></title>
       <url>http://yoursite.com/2016/07/07/java%E7%9A%841900%E5%B9%B4%E6%97%B6%E9%97%B4%E9%97%AE%E9%A2%98/</url>
       <content type="html"><![CDATA[<p>在爬公元农历数据，检查数据的时候发现了一件非常有趣的事情，就是在1900年1月1号的时候，当时的timestamp减去86400000ms，发现时间竟然不一致，然后google了一下，发现在stackoverflow上有人提了类似的问题：<br><a href="http://stackoverflow.com/questions/16409554/30-minute-error-in-java-date-calculation-in-year-1900-only" target="_blank" rel="external">http://stackoverflow.com/questions/16409554/30-minute-error-in-java-date-calculation-in-year-1900-only</a></p>
