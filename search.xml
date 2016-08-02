@@ -4,6 +4,44 @@
   
     
     <entry>
+      <title><![CDATA[hbase 集群问题追踪]]></title>
+      <url>http://yoursite.com/2016/08/02/hbase-%E9%9B%86%E7%BE%A4%E9%97%AE%E9%A2%98%E8%BF%BD%E8%B8%AA/</url>
+      <content type="html"><![CDATA[<h2 id="频繁的报警和Hbase无响应"><a href="#频繁的报警和Hbase无响应" class="headerlink" title="频繁的报警和Hbase无响应"></a>频繁的报警和Hbase无响应</h2><p>最开始接手运维工作的时候，公司的Hbase经常性宕机，出现的症状一般是RegionServer无响应，之前运维的做法一般就是————重启。</p>
+<p>好吧，公司没有专业的运维，这真是非常蛋疼的事啊，只能自己研究了。</p>
+<h3 id="出现过的现象"><a href="#出现过的现象" class="headerlink" title="出现过的现象"></a>出现过的现象</h3><p>1.regionserver无响应，SocketTimeout Exception。</p>
+<p>2.master没有异常log</p>
+<p>3.RegionServer log 频繁出现requesting flush for region,这貌似和旧版本的hbase有关，相关可以看<a href="https://issues.apache.org/jira/browse/HBASE-10499" target="_blank" rel="external">HBASE-10499</a></p>
+<h3 id="寻找问题根源"><a href="#寻找问题根源" class="headerlink" title="寻找问题根源"></a>寻找问题根源</h3><p>最开始怀疑是Hbase GC导致的Hbase假死，因此上Hbase服务器查看了一下配置。Hbase只改了堆的大小的设置，没有再做其他任何的调优配置。于是进行了Hbase的调优配置。用jstat -gc 观察了一下hbase服务器的gc情况，发现gc还是十分频繁的。（其实几乎没有做任何gc的优化）</p>
+<p>Hbase调优主要做了这几个：</p>
+<p>参考 <a href="https://segmentfault.com/a/1190000000719750#articleHeader6" target="_blank" rel="external">https://segmentfault.com/a/1190000000719750#articleHeader6</a></p>
+<ol>
+<li>Hbase内存堆大小。原来的Hbase的机器做了一次内存扩容，16G内存，然而堆大小只有7G，因此把堆内存调到了14G。官方文档中推荐的大小是不超过16G，因为过大的内存会导致额外的GC负担。</li>
+<li>关闭vm.swapiness,对于hbase来说交换区的使用会大大降低效率，还不如直接关掉来的痛快。</li>
+<li><p>打开gc日志</p>
+<p> export HBASE_OPTS=”$HBASE_OPTS -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -Xloggc:/usr/local/hbase/logs/gc-hbase.log”</p>
+</li>
+<li>更早的GC。对于Hbase这种对于cpu不敏感的程序来说，更早的GC能够有效的将cpu的性能转化为内存性能。</li>
+</ol>
+<p>其他还有一些优化配置，比如增加handler线程什么的就不说了，网上能搜到不少。</p>
+<h3 id="并完全没有起效"><a href="#并完全没有起效" class="headerlink" title="并完全没有起效"></a>并完全没有起效</h3><p>Hbase在做了优化配置之后，状况有所缓解，但是并没有杜绝hbase宕机的情况。由于之前没有做运维监控，在搭建了nagios服务之后，写了一个监控hbase服务的监控脚本用来报警，一周大概hbase会宕机好几次，简直令人崩溃。Hbase是我们服务的核心存储模块（还有之前的cobar模块，cobar在优化之后稳定的可怕，再也没有宕机过了），这个问题现在是我们公司最主要的问题之一，真是令人感到压力。</p>
+<p>在这之后，我又启用了JMX监控来监控GC情况，在一次宕机的时候，检测了该机器的GC情况，发现机器内存使用和GC都很正常，令人非常困惑。</p>
+<h3 id="HDFS-Safemode"><a href="#HDFS-Safemode" class="headerlink" title="HDFS Safemode"></a>HDFS Safemode</h3><p>偶然一次的报警，引起了我的兴趣。HDFS的namenode竟然由于磁盘满了，导致了HDFS进入了safemode，从而Hbase挂掉了。上去HDFS一看，发现HDFS的NN竟然使用的是只有20G的系统盘。大坑啊，赶紧清理了一下log，但是namenode磁盘空间依然十分紧张，由于没有玩过hdfs，也没有敢轻易动手。不过hdfs的问题很有可能是hbase不可用的元凶。</p>
+<p>然而在7月31号的晚上，HBase再次挂掉，HDFS namenode磁盘告警，好吧，尝试fix这个问题。</p>
+<h3 id="处理问题中遇到的大坑"><a href="#处理问题中遇到的大坑" class="headerlink" title="处理问题中遇到的大坑"></a>处理问题中遇到的大坑</h3><p>1.我给namenode挂载了一块新的性能型磁盘，然后停止了hdfs服务（千万记得su hadoop，不然又是坑），将namenode上的数据复制了一份过去，然后启动了hadoop集群。启动hbase发现hbase连的另外一个hdfs(???什么鬼)，一看配置文件，发现hadoop配了ha，估计是主节点挂掉了，启用了备用的master。然而登陆到了备用master上，看日志发现备用master在7月5号就挂掉了，hdfs的editlog直接不可读，原来的目录好像直接坏了。于是从主nn上复制了一份文件到备用master，将配置文件中目录修改了之后，重启了nn机器和hadoop集群。</p>
+<p>2.启动之后发现竟然看不到监控页面，不知道什么原因。后来查看netstat发现监控的127.0.1.1的地址的端口，进入host一看，发现host文件中 hadoop-master的地址是127.0.1.1（青云改了我们的host文件，估计是由于我重启机器导致的）。修改hosts文件，终于看到了hadoop的监控页面。</p>
+<p>3.启动hbase集群之后发现hbase连的还是备用master，看了一下日志发现主nn处于standby状态。使用命令切换nn的状态</p>
+<pre><code>hdfs haadmin -transitionToActive nn1
+</code></pre><p>4.重启hadoop，发现很多block丢失，一直处于safemode。不管了，直接强制退出safemode试试。（胆子太肥了，现在想想真的是很危险的举动）</p>
+<pre><code>hadoop dfsadmin -safemode leave
+</code></pre><p>5.Hbase成功启动，但是hbase没办法读写，很多region fail open。这下问题严重了，丢失了很多数据，把我惊出一身冷汗。赶紧查看监控页面，发现没有dead server，数据为何无缘无故丢失，难道是我没有正确关闭hdfs？最后仔细查看了hadoop集群的情况，突然发现很多结点的机器找不到了。终于找到问题所在，在启动hadoop集群的时候很多datanode根本没有启动成功，登陆到结点发现机器的hostname被改了。虽然/etc/systemconfig/network文件中的配置没变，但是Hostname还是被改了。坑爹的青云已经不是第一次修改我们的host了。修改了host之后启动datanode，终于hadoop启动成功。</p>
+<h3 id="fixed！！"><a href="#fixed！！" class="headerlink" title="fixed！！"></a>fixed！！</h3><p>从9点开始一直弄到晚上2点半，终于把hdfs重新弄好，hbase也启动成功。现在已经8月2号了，监控脚本一次报警也没有出现过！现在hbase非常稳定，而且之前会出现的频繁报警（虽然会自动恢复）也不再出现。困扰我2个月（困扰公司2年）的重大问题终于解决，松了一口气。</p>
+<h3 id="接下来的计划"><a href="#接下来的计划" class="headerlink" title="接下来的计划"></a>接下来的计划</h3><p>网站的mysql集群由于一个字段缺少索引，导致非常慢，而且冷热数据没有分离，打算用presto或者impala将数据分离，并且优化原来的mysql集群。</p>
+<p>presto在单机情况下效率还可以，但是对多用户支持貌似不怎么样，看了一些文档，impala貌似性能更加好？打算测试一下impala的性能。</p>
+<p>现在presto有1.7亿条数据，对于一般的查询，效率还算可以，如果限定分区的话，效率非常高，需要进一步测试。</p>
+]]></content>
+    </entry>
+    
+    <entry>
       <title><![CDATA[Presto实现原理和美团的使用实践]]></title>
       <url>http://yoursite.com/2016/07/09/Presto%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86%E5%92%8C%E7%BE%8E%E5%9B%A2%E7%9A%84%E4%BD%BF%E7%94%A8%E5%AE%9E%E8%B7%B5/</url>
       <content type="html"><![CDATA[<p>最近网站需要重构，原来的sql架构没有办法承受10亿级别的数据量。cobar中间件虽然很好的构建了一个mysql集群，但是这个集群没有扩展性。而且我们的数据很多都是历史数据，不会频繁访问（其实现阶段根本不会用到这些数据），因此考虑新的技术选型，把冷数据和热数据分隔开来，使用扩展性良好以及性能表现出色的presto，目前正在测试性能，以目前的情况来说，presto性能确实不错，非常适合做数据仓库，能够胜任OLAP的工作。</p>
